@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pepermint Torrent Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-image: url("file:///C:/Users/Lukman/Pictures/background.jpg");
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+        }
+        h2 {
+            text-align: center;
+            color: #fff;
+        }
+        #searchForm {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 60%;
+            margin-right: 10px;
+        }
+        button[type="submit"] {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .loading iframe {
+            width: 50px;
+            height: 50px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+        .torrent-table {
+            border: 1px solid #000;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .torrent-table th, .torrent-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+        }
+        .torrent {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .torrent p {
+            margin: 5px 0;
+            color: #000; /* Ubah warna teks menjadi hitam */
+        }
+        .torrent ul {
+            margin: 5px 0;
+            color: #000; /* Ubah warna teks menjadi hitam */
+        }
+        .torrent a {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        .torrent a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Pepermint Torrent Search</h2>
+    <form id="searchForm">
+        <label for="query">Masukkan judul film:</label>
+        <input type="text" id="query" name="query">
+        <button type="submit">Cari</button>
+    </form>
+    <div id="loading" class="loading">
+        <iframe src="https://giphy.com/embed/gJ3mEToTDJn3LT6kCT" width="480" height="480" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+        <p>Mencari...</p>
+    </div>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById("searchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let query = document.getElementById("query").value;
+            let limit = 5;
+            let url = "https://torrent-api-py-nx0x.onrender.com/api/v1/all/search"; // Ganti URL_API_ANDA dengan URL API Anda
+            let params = { "query": query, "limit": limit };
+
+            // Tampilkan indikator loading
+            document.getElementById("loading").style.display = "block";
+
+            fetch(url + "?" + new URLSearchParams(params))
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Gagal mengambil data. Kode status: " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    let torrents = data.data || [];
+
+                    let resultsDiv = document.getElementById("results");
+                    resultsDiv.innerHTML = "";
+
+                    // Buat elemen tabel
+                    let table = document.createElement("table");
+                    table.classList.add("torrent-table");
+
+                    // Buat header tabel
+                    let tableHeader = document.createElement("thead");
+                    tableHeader.innerHTML = `
+                        <tr>
+                            <th>Nama</th>
+                            <th>Ukuran</th>
+                            <th>Seeder</th>
+                            <th>URL</th>
+                            <th>Files</th>
+                            <th>Magnet</th>
+                        </tr>
+                    `;
+                    table.appendChild(tableHeader);
+
+                    // Buat body tabel
+                    let tableBody = document.createElement("tbody");
+
+                    torrents.forEach(torrent => {
+                        let name = torrent.name || "N/A";
+                        let size = torrent.size || "N/A";
+                        let seeder = torrent.seeders || "N/A";
+                        let url = torrent.url || "N/A";
+                        let files = torrent.files || ["N/A"];
+                        let magnet = torrent.magnet || "N/A";
+
+                        // Buat baris untuk setiap torrent
+                        let row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${name}</td>
+                            <td>${size}</td>
+                            <td>${seeder}</td>
+                            <td><a href="${url}" target="_blank">${url}</a></td>
+                            <td>
+                                <ul>
+                                    ${files.map(file => `<li>${file}</li>`).join("")}
+                                </ul>
+                            </td>
+                            <td><a href="${magnet}" target="_blank">Link</a></td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+
+                    table.appendChild(tableBody);
+                    resultsDiv.appendChild(table);
+
+                    // Sembunyikan indikator loading setelah hasil dirender
+                    document.getElementById("loading").style.display = "none";
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    // Sembunyikan indikator loading jika terjadi kesalahan
+                    document.getElementById("loading").style.display = "none";
+                });
+        });
+    </script>
+</body>
+</html>
